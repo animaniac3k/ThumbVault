@@ -13,11 +13,13 @@ Keep this structure:
     base.css
     capture.css
     history.css
+    chart.css
     modals.css
   js/
     state.js
     capture.js
     history.js
+    chart.js
     sync.js
     app.js
 

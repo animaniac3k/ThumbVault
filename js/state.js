@@ -130,9 +130,9 @@ function loadState() {
         return;
       }
     }
-    populateSampleData();
+    expenses = [];
   } catch (e) {
-    populateSampleData();
+    expenses = [];
   }
 }
 
@@ -230,21 +230,6 @@ function saveState() {
   }
 }
 
-function populateSampleData() {
-  const now = Date.now();
-  const hour = 3600000;
-  expenses = [
-    { id: 'tx_1', amount: 3.85, category: 'coffee', note: 'Flat White & Croissant', timestamp: now - hour * 1.5, updatedAt: now - hour * 1.5 },
-    { id: 'tx_2', amount: 12.50, category: 'food', note: 'Pret Lunch with Dan', timestamp: now - hour * 4, updatedAt: now - hour * 4 },
-    { id: 'tx_3', amount: 3.40, category: 'transit', note: 'Underground Tube fare', timestamp: now - hour * 8, updatedAt: now - hour * 8 },
-    { id: 'tx_4', amount: 31.20, category: 'groceries', note: 'M&S Food Essentials', timestamp: now - hour * 27, updatedAt: now - hour * 27 },
-    { id: 'tx_5', amount: 15.99, category: 'shopping', note: 'Braided Audio Cable', timestamp: now - hour * 56, updatedAt: now - hour * 56 },
-    { id: 'tx_6', amount: 48.00, category: 'bills', note: 'Home Broadband', timestamp: now - hour * 120, updatedAt: now - hour * 120 }
-  ];
-  deletedMap = {};
-  saveState();
-}
-
 function getEffectiveDayInMonth(year, monthIndex, targetDay) {
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   return Math.min(targetDay, daysInMonth);
@@ -313,7 +298,7 @@ function showToast(msg, undoCallback = null) {
   toastTimer = setTimeout(() => {
     toast.classList.remove('show');
     currentToastUndoHandler = null;
-  }, undoCallback ? 4000 : 2400);
+  }, undoCallback ? 8000 : 2400);
 }
 
 function handleToastUndo() {

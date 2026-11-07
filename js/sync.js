@@ -9,8 +9,18 @@ function loadR2Config() {
     const token = localStorage.getItem('thumbvault_r2_token') || '';
     const urlEl = document.getElementById('r2EndpointInput');
     const tokEl = document.getElementById('r2TokenInput');
-    if (urlEl) urlEl.value = url;
-    if (tokEl) tokEl.value = token;
+    if (urlEl) {
+      urlEl.value = url;
+      urlEl.addEventListener('change', () => {
+        try { localStorage.setItem('thumbvault_r2_url', urlEl.value.trim()); } catch (e) {}
+      });
+    }
+    if (tokEl) {
+      tokEl.value = token;
+      tokEl.addEventListener('change', () => {
+        try { localStorage.setItem('thumbvault_r2_token', tokEl.value.trim()); } catch (e) {}
+      });
+    }
     updateLastSyncLabel();
   } catch (e) {}
 }
@@ -282,8 +292,94 @@ async function pushToR2() {
 }
 
 /* =========================================================================
-   LOCAL JSON EXPORT, IMPORT & DATA RESET
+   CSV GENERATION, EMAIL EXPORT & LOCAL JSON BACKUP
    ========================================================================= */
+function escapeCSVField(val) {
+  const str = String(val ?? '');
+  if (/[",\r\n]/.test(str)) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function buildExpensesCSVString() {
+  const headers = ['Date', 'Time', 'Category', 'Description', 'Amount', 'Currency'];
+  const rows = [headers.join(',')];
+
+  const sorted = [...expenses].sort((a, b) => b.timestamp - a.timestamp);
+  sorted.forEach(tx => {
+    const d = new Date(tx.timestamp);
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const cat = CATEGORIES.find(c => c.id === tx.category);
+    const catLabel = cat ? cat.label : tx.category;
+
+    rows.push([
+      escapeCSVField(dateStr),
+      escapeCSVField(timeStr),
+      escapeCSVField(catLabel),
+      escapeCSVField(tx.note || ''),
+      tx.amount.toFixed(2),
+      escapeCSVField(currencySymbol)
+    ].join(','));
+  });
+
+  return rows.join('\r\n');
+}
+
+function getCSVFilename() {
+  return `thumbvault_${new Date().toISOString().slice(0, 10)}.csv`;
+}
+
+function triggerCSVDownload(csvContent, filename) {
+  // Prefix UTF-8 BOM so Excel / Numbers renders currency symbols (£, €, ¥) accurately
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function shareOrDownloadCSV() {
+  if (expenses.length === 0) {
+    showToast('No expenses to export yet');
+    return;
+  }
+
+  const csvContent = buildExpensesCSVString();
+  const filename = getCSVFilename();
+  const totalSum = expenses.reduce((acc, item) => acc + item.amount, 0);
+
+  // Use Web Share API Level 2 on Android / iOS to share/attach the real .csv file
+  if (navigator.canShare && typeof File === 'function') {
+    try {
+      const file = new File(['\uFEFF' + csvContent], filename, { type: 'text/csv' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `ThumbVault Expenses (${filename})`,
+          text: `ThumbVault export: ${expenses.length} records, total ${currencySymbol}${totalSum.toFixed(2)}.`
+        });
+        closeModal();
+        showToast('Shared CSV file');
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback on desktop / unsupported browsers: download the .csv file directly
+  triggerCSVDownload(csvContent, filename);
+  closeModal();
+  showToast('Downloaded CSV file');
+}
+
 function exportBackupJSON() {
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(expenses, null, 2));
   const downloadAnchor = document.createElement('a');
@@ -324,14 +420,6 @@ function importBackupJSON(e) {
   };
   reader.readAsText(file);
   e.target.value = '';
-}
-
-function resetToSampleData() {
-  populateSampleData();
-  renderTotals();
-  renderHistoryView();
-  closeModal();
-  showToast('Sample data restored');
 }
 
 function wipeAllData() {

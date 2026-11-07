@@ -10,7 +10,9 @@ window.addEventListener('DOMContentLoaded', () => {
   refreshInputDisplay();
   renderTotals();
   renderHistoryView();
+  updateScreenInertState();
   setupSwipeGestures();
+  setupInputKeyboardBehavior();
   setupPhysicalKeyboard();
   loadR2Config();
 });
@@ -25,21 +27,64 @@ function initPWA() {
 /* =========================================================================
    SWIPE & SCREEN SWITCHER NAVIGATION
    ========================================================================= */
-function switchScreen(idx) {
-  if (idx === currentScreenIdx) return;
-  triggerHaptic(8);
-  currentScreenIdx = idx;
-
+function resetViewportScroll() {
+  const viewport = document.getElementById('viewport');
   const slider = document.getElementById('screensSlider');
-  if (slider) {
-    slider.style.transform = `translateX(-${currentScreenIdx * 50}%)`;
+  if (viewport && (viewport.scrollLeft !== 0 || viewport.scrollTop !== 0)) {
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
   }
+  if (slider && (slider.scrollLeft !== 0 || slider.scrollTop !== 0)) {
+    slider.scrollLeft = 0;
+    slider.scrollTop = 0;
+  }
+}
+
+function updateScreenInertState() {
+  const capturePane = document.getElementById('screenCapture');
+  const historyPane = document.getElementById('screenHistory');
+  const chartPane = document.getElementById('screenChart');
+  if (capturePane) {
+    capturePane.inert = currentScreenIdx !== 0;
+    capturePane.setAttribute('aria-hidden', String(currentScreenIdx !== 0));
+  }
+  if (historyPane) {
+    historyPane.inert = currentScreenIdx !== 1;
+    historyPane.setAttribute('aria-hidden', String(currentScreenIdx !== 1));
+  }
+  if (chartPane) {
+    chartPane.inert = currentScreenIdx !== 2;
+    chartPane.setAttribute('aria-hidden', String(currentScreenIdx !== 2));
+  }
+  resetViewportScroll();
+}
+
+function switchScreen(idx) {
+  const clampedIdx = Math.max(0, Math.min(2, idx));
+  resetViewportScroll();
+  const slider = document.getElementById('screensSlider');
+  const stepPct = 100 / 3;
+  if (slider) {
+    slider.style.transform = `translateX(-${clampedIdx * stepPct}%)`;
+  }
+  if (clampedIdx === currentScreenIdx) return;
+
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+
+  triggerHaptic(8);
+  currentScreenIdx = clampedIdx;
+  updateScreenInertState();
 
   document.getElementById('tabCapture')?.classList.toggle('active', currentScreenIdx === 0);
   document.getElementById('tabHistory')?.classList.toggle('active', currentScreenIdx === 1);
+  document.getElementById('tabChart')?.classList.toggle('active', currentScreenIdx === 2);
 
   if (currentScreenIdx === 1) {
     renderHistoryView();
+  } else if (currentScreenIdx === 2) {
+    renderChartView();
   }
 }
 
@@ -53,13 +98,11 @@ function setupSwipeGestures() {
   let currentDeltaX = 0;
   let isHorizontal = false;
   let isTouching = false;
-  let startedOnTxItem = false;
 
   viewport.addEventListener('touchstart', (e) => {
     if (e.target.closest('#catCarousel') || e.target.closest('input') || e.target.closest('.modal-backdrop')) {
       return;
     }
-    startedOnTxItem = Boolean(e.target.closest('.tx-item'));
     const touch = e.touches[0];
     startX = touch.clientX;
     startY = touch.clientY;
@@ -75,14 +118,6 @@ function setupSwipeGestures() {
     const diffX = touch.clientX - startX;
     const diffY = touch.clientY - startY;
 
-    // On History screen, leftward swipe on a transaction card is reserved for swipe-to-delete
-    if (currentScreenIdx === 1 && startedOnTxItem && diffX < 0) {
-      isTouching = false;
-      slider.classList.remove('no-anim');
-      slider.style.transform = `translateX(-${currentScreenIdx * 50}%)`;
-      return;
-    }
-
     if (!isHorizontal) {
       if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
         isHorizontal = true;
@@ -95,9 +130,10 @@ function setupSwipeGestures() {
 
     if (isHorizontal) {
       currentDeltaX = diffX;
-      const baseOffset = -currentScreenIdx * 50;
-      let percentDelta = (diffX / viewport.clientWidth) * 50;
-      if ((currentScreenIdx === 0 && diffX > 0) || (currentScreenIdx === 1 && diffX < 0)) {
+      const stepPct = 100 / 3;
+      const baseOffset = -currentScreenIdx * stepPct;
+      let percentDelta = (diffX / viewport.clientWidth) * stepPct;
+      if ((currentScreenIdx === 0 && diffX > 0) || (currentScreenIdx === 2 && diffX < 0)) {
         percentDelta *= 0.3;
       }
       slider.style.transform = `translateX(${baseOffset + percentDelta}%)`;
@@ -109,13 +145,14 @@ function setupSwipeGestures() {
     isTouching = false;
     slider.classList.remove('no-anim');
 
+    const stepPct = 100 / 3;
     const threshold = 55;
-    if (currentDeltaX < -threshold && currentScreenIdx === 0) {
-      switchScreen(1);
-    } else if (currentDeltaX > threshold && currentScreenIdx === 1) {
-      switchScreen(0);
+    if (currentDeltaX < -threshold && currentScreenIdx < 2) {
+      switchScreen(currentScreenIdx + 1);
+    } else if (currentDeltaX > threshold && currentScreenIdx > 0) {
+      switchScreen(currentScreenIdx - 1);
     } else {
-      slider.style.transform = `translateX(-${currentScreenIdx * 50}%)`;
+      slider.style.transform = `translateX(-${currentScreenIdx * stepPct}%)`;
     }
     currentDeltaX = 0;
   };
@@ -149,6 +186,38 @@ function isAnyModalOpen() {
   );
 }
 
+function setupInputKeyboardBehavior() {
+  // Prevent browser focus-into-view from scrolling the overflow:hidden viewport/slider
+  const viewport = document.getElementById('viewport');
+  const slider = document.getElementById('screensSlider');
+  if (viewport) viewport.addEventListener('scroll', resetViewportScroll, { passive: true });
+  if (slider) slider.addEventListener('scroll', resetViewportScroll, { passive: true });
+
+  // Make the on-screen keyboard action button (Done / Next / -> / Enter) cleanly dismiss
+  // the keyboard and preserve the typed value rather than jumping to off-screen inputs.
+  const inputIds = [
+    'txNoteInput',
+    'historySearch',
+    'editAmountInput',
+    'editNoteInput',
+    'r2EndpointInput',
+    'r2TokenInput'
+  ];
+
+  inputIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Tab' || e.keyCode === 13 || e.keyCode === 9) {
+        e.preventDefault();
+        e.stopPropagation();
+        el.blur();
+        resetViewportScroll();
+      }
+    });
+  });
+}
+
 function setupPhysicalKeyboard() {
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -174,9 +243,9 @@ function setupPhysicalKeyboard() {
     } else if (e.key === 'Enter' && currentScreenIdx === 0) {
       commitRecord();
     } else if (e.key === 'ArrowRight') {
-      switchScreen(1);
+      if (currentScreenIdx < 2) switchScreen(currentScreenIdx + 1);
     } else if (e.key === 'ArrowLeft') {
-      switchScreen(0);
+      if (currentScreenIdx > 0) switchScreen(currentScreenIdx - 1);
     }
   });
 }

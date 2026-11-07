@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thumbvault-shell-v6';
+const CACHE_NAME = 'thumbvault-shell-v13';
 const APP_SHELL = [
   './',
   './index.html',
@@ -9,10 +9,12 @@ const APP_SHELL = [
   './css/base.css',
   './css/capture.css',
   './css/history.css',
+  './css/chart.css',
   './css/modals.css',
   './js/state.js',
   './js/capture.js',
   './js/history.js',
+  './js/chart.js',
   './js/sync.js',
   './js/app.js'
 ];

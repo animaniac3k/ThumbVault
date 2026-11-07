@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/capture.css">
   <link rel="stylesheet" href="./css/history.css">
+  <link rel="stylesheet" href="./css/chart.css">
   <link rel="stylesheet" href="./css/modals.css">
 </head>
 <body>
@@ -51,6 +52,9 @@
         </button>
         <button type="button" class="screen-tab-btn" id="tabHistory" onclick="switchScreen(1)">
           History <span id="historyPillCount" style="opacity: 0.7; font-size: 10px;"></span>
+        </button>
+        <button type="button" class="screen-tab-btn" id="tabChart" onclick="switchScreen(2)">
+          Chart
         </button>
       </div>
 
@@ -109,7 +113,7 @@
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
-            <input type="text" id="txNoteInput" placeholder="Quick note (optional)..." maxlength="80">
+            <input type="text" id="txNoteInput" enterkeyhint="done" placeholder="Quick note (optional)..." maxlength="80">
           </div>
         </div>
 
@@ -153,7 +157,7 @@
       </section>
 
       <!-- SCREEN 2: HISTORY -->
-      <section class="screen-pane" id="screenHistory">
+      <section class="screen-pane" id="screenHistory" inert>
         <!-- Controls: Search & Time Filter -->
         <div class="history-controls">
           <div class="search-row">
@@ -161,7 +165,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="historySearch" placeholder="Filter by note or category..." oninput="onSearchChange()">
+            <input type="text" id="historySearch" enterkeyhint="done" placeholder="Filter by note or category..." oninput="onSearchChange()">
           </div>
 
           <div class="filter-pills-row">
@@ -176,7 +180,7 @@
         <div class="history-summary-strip">
           <div class="history-summary-left">
             <span id="filteredCountLabel">0 records</span>
-            <span class="history-summary-hint">Tap entry to edit • Swipe left to delete</span>
+            <span class="history-summary-hint">Tap entry to edit</span>
           </div>
           <div class="history-summary-right" id="filteredSumLabel">
             £0.00
@@ -194,6 +198,36 @@
             <line x1="2" y1="10" x2="22" y2="10"></line>
           </svg>
           <span>No matching records found</span>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: PIE CHART & CATEGORY GRID (CONCEPT B) -->
+      <section class="screen-pane" id="screenChart" inert>
+        <div class="chart-controls">
+          <div class="filter-pills-row">
+            <button type="button" class="time-filter-btn" id="chart-flt-all" onclick="applyChartTimeFilter('all')">All</button>
+            <button type="button" class="time-filter-btn" id="chart-flt-today" onclick="applyChartTimeFilter('today')">Today</button>
+            <button type="button" class="time-filter-btn" id="chart-flt-week" onclick="applyChartTimeFilter('week')">Week</button>
+            <button type="button" class="time-filter-btn active" id="chart-flt-month" onclick="applyChartTimeFilter('month')">Month</button>
+          </div>
+        </div>
+
+        <!-- Solid Pie Chart + Period / Selected Category Hero Card -->
+        <div class="chart-hero-card">
+          <div class="pie-svg-wrap" id="pieChartSvgContainer">
+            <!-- Solid SVG Pie rendered dynamically -->
+          </div>
+          <div class="chart-hero-info">
+            <span class="chart-hero-tag" id="chartHeroTag">Month Total</span>
+            <div class="chart-hero-amount" id="chartHeroAmount">£0.00</div>
+            <span class="chart-hero-sub" id="chartHeroSub">0 active categories</span>
+            <span class="chart-hero-hint" id="chartHeroHint">Tap slice or card to inspect</span>
+          </div>
+        </div>
+
+        <!-- 2-Column Zero-Scroll Category Breakdown Grid -->
+        <div class="chart-cat-grid" id="chartCategoryGrid">
+          <!-- Rendered dynamically -->
         </div>
       </section>
 
@@ -218,7 +252,7 @@
         <label class="field-label" for="editAmountInput" id="editAmountLabel">Amount (£)</label>
         <div class="edit-amount-box">
           <span class="edit-currency-prefix" id="editCurrencyPrefix">£</span>
-          <input type="number" id="editAmountInput" step="0.01" min="0.01" inputmode="decimal" placeholder="0.00">
+          <input type="number" id="editAmountInput" enterkeyhint="done" step="0.01" min="0.01" inputmode="decimal" placeholder="0.00">
         </div>
       </div>
 
@@ -231,7 +265,7 @@
 
       <div class="field-group">
         <label class="field-label" for="editNoteInput">Description / Note</label>
-        <input type="text" id="editNoteInput" class="modal-input" maxlength="80" placeholder="Note or description...">
+        <input type="text" id="editNoteInput" enterkeyhint="done" class="modal-input" maxlength="80" placeholder="Note or description...">
       </div>
 
       <div class="field-group">
@@ -297,8 +331,8 @@
           <span class="r2-panel-title">Cloudflare R2 Sync</span>
           <span class="r2-sync-status" id="r2SyncStatus">Not synced yet</span>
         </div>
-        <input type="url" id="r2EndpointInput" class="modal-input mono" placeholder="https://thumbvault-sync.YOUR-SUBDOMAIN.workers.dev">
-        <input type="password" id="r2TokenInput" class="modal-input" placeholder="Secret Key (x-vault-key)">
+        <input type="url" id="r2EndpointInput" enterkeyhint="done" class="modal-input mono" placeholder="https://thumbvault-sync.YOUR-SUBDOMAIN.workers.dev">
+        <input type="password" id="r2TokenInput" enterkeyhint="done" class="modal-input" placeholder="Secret Key (x-vault-key)">
 
         <button type="button" class="modal-btn r2-btn-sync" id="btnR2SmartSync" onclick="syncWithR2()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -329,6 +363,17 @@
         </div>
       </div>
 
+      <button type="button" class="modal-btn csv-btn-share" onclick="shareOrDownloadCSV()" title="Share .csv file via phone share sheet or save to device">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        Share / Save .CSV
+      </button>
+
       <div class="modal-row-2">
         <button type="button" class="modal-btn primary" onclick="exportBackupJSON()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -350,23 +395,13 @@
         </label>
       </div>
 
-      <div class="modal-row-2">
-        <button type="button" class="modal-btn danger" onclick="resetToSampleData()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-          </svg>
-          Sample Data
-        </button>
-
-        <button type="button" class="modal-btn danger" onclick="wipeAllData()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-          Clear All
-        </button>
-      </div>
+      <button type="button" class="modal-btn danger" onclick="wipeAllData()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Clear All Expenses
+      </button>
 
       <button type="button" class="modal-btn accent" onclick="closeModal()">
         Done
@@ -387,6 +422,7 @@
   <script src="./js/state.js"></script>
   <script src="./js/capture.js"></script>
   <script src="./js/history.js"></script>
+  <script src="./js/chart.js"></script>
   <script src="./js/sync.js"></script>
   <script src="./js/app.js"></script>
 </body>

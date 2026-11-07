@@ -115,34 +115,9 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Swipeable Entry Wrapper */
-.tx-swipe-wrap {
-  position: relative;
-  border-radius: 15px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: linear-gradient(90deg, rgba(244, 63, 94, 0.15) 0%, #e11d48 100%);
-}
-
-.tx-swipe-bg {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 18px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  gap: 6px;
-  pointer-events: none;
-}
-
+/* Transaction Entry Card */
 .tx-item {
   position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -151,16 +126,13 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-left: 5px solid var(--cat-color, #10b981);
+  flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
+  transition: background-color 0.15s ease;
   touch-action: pan-y;
 }
 
-.tx-item.swiping {
-  transition: none !important;
-}
-
-.tx-item:active:not(.swiping) {
+.tx-item:active {
   background: var(--bg-card-hover);
 }
 
@@ -228,22 +200,25 @@
   color: #ffffff;
 }
 
-.tx-action-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+.tx-del-btn {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.1s ease, background-color 0.15s ease;
 }
 
-.tx-action-btn:active {
-  color: #f43f5e;
-  background: rgba(244, 63, 94, 0.15);
+.tx-del-btn:active {
+  transform: scale(0.92);
+  color: #ffffff;
+  background: #e11d48;
 }
 
 .empty-state {

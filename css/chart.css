@@ -1,0 +1,181 @@
+/* =========================================================================
+   SCREEN 3: PIE CHART & 2-COLUMN CATEGORY GRID (CONCEPT B)
+   ========================================================================= */
+#screenChart {
+  padding: 12px 14px calc(var(--safe-bottom) + 10px);
+  gap: 10px;
+  justify-content: space-between;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.chart-controls {
+  flex: 0 0 auto;
+}
+
+/* Top Hero Card: Solid Pie Chart + Period / Selected Category Readout */
+.chart-hero-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 0 0 auto;
+  min-height: 164px;
+}
+
+.pie-svg-wrap {
+  width: 142px;
+  height: 142px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pie-slice {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+
+.chart-hero-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 3px;
+}
+
+.chart-hero-tag {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.chart-hero-amount {
+  font-family: var(--font-num);
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.chart-hero-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.chart-hero-hint {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* 2-Column Zero-Scroll Category Breakdown Grid */
+.chart-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  flex: 1 1 auto;
+  align-content: start;
+}
+
+.chart-cat-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 10px 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+
+.chart-cat-card:active {
+  transform: scale(0.98);
+}
+
+.chart-cat-card.selected {
+  background: var(--cat-bg);
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chart-cat-card.zero-spend {
+  opacity: 0.48;
+}
+
+/* Subtle bottom progress bar inside each grid card */
+.chart-cat-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--cat-color);
+  border-radius: 0 3px 0 0;
+  transition: width 0.25s ease;
+}
+
+.chart-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.chart-cat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cat-color);
+  flex-shrink: 0;
+}
+
+.chart-cat-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chart-cat-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-cat-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.chart-cat-amount {
+  font-family: var(--font-num);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}

@@ -25,14 +25,16 @@ ThumbVault/
 ├── css/
 │   ├── base.css                    # Design tokens, viewport layout, header, slider, toast
 │   ├── capture.css                 # Screen 1 styles (glance metrics, dial, pills, numpad)
-│   ├── history.css                 # Screen 2 styles (filters, summary strip, swipe rows)
+│   ├── history.css                 # Screen 2 styles (filters, summary strip, entry rows)
+│   ├── chart.css                   # Screen 3 styles (solid pie chart hero, 2-col grid)
 │   └── modals.css                  # Options modal, currency selector, R2 panel, Edit modal
 ├── js/
 │   ├── state.js                    # Global state, CATEGORIES, localStorage I/O, toast/undo
 │   ├── capture.js                  # Numpad engine, category selection, record creation, totals
-│   ├── history.js                  # Search/time filtering, swipe-to-delete, Edit modal logic
-│   ├── sync.js                     # Cloudflare R2 Smart 2-Way Sync / Pull / Push & JSON I/O
-│   └── app.js                      # Bootstrapping, PWA SW registration, screen swipe, keyboard
+│   ├── history.js                  # Search/time filtering, delete + undo, Edit modal logic
+│   ├── chart.js                    # Solid SVG Pie Chart & 2-column category breakdown grid
+│   ├── sync.js                     # Cloudflare R2 Smart 2-Way Sync / Pull / Push, CSV & JSON I/O
+│   └── app.js                      # Bootstrapping, PWA SW registration, 3-screen swipe, keyboard
 └── docs/
     ├── architecture.txt            # This high-level architecture & connection reference
     └── architecture-infographic.svg # Visual infographic diagram of the architecture
@@ -112,20 +114,20 @@ C. Screen 1: Capture Flow (`#screenCapture` <-> `js/capture.js` <-> `js/state.js
        and `updatedAt: Date.now()`, inserts it into `expenses`, calls `saveState()`,
        resets the dial, triggers haptic vibration, and refreshes both screens.
 
-D. Screen 2: History, Swipe-to-Delete & Edit Flow (`#screenHistory` <-> `js/history.js`)
+D. Screen 2: History, Delete Button & Edit Flow (`#screenHistory` <-> `js/history.js`)
    - Search box (`onSearchChange`) and time filter pills (`applyTimeFilter` for
      All / Today / Week / Month) filter `expenses` and update the summary strip
      (`#filteredCountLabel`, `#filteredSumLabel`).
-   - Each transaction row (`.tx-item` inside `.tx-swipe-wrap`) has dedicated touch
-     handlers in `attachItemInteractions()`:
-     * SWIPE LEFT (`dx < 0`): Stops event propagation to `#viewport`, drags the card
-       left to reveal the red Delete track, and if dragged past `-75px`, calls
-       `removeTx(id)`. `removeTx(id)` removes the record, records a tombstone in
-       `deletedMap[id]`, and displays a Toast with an "Undo" button (`handleToastUndo()`).
-     * SWIPE RIGHT (`dx > 0`): Bubbles up to `#viewport` in `js/app.js` so swiping
-       right anywhere on the History screen smoothly slides back to the Capture screen.
-     * TAP (no drag): Calls `openEditModal(id)`, opening `#editModal` pre-filled with
-       the transaction's amount, category, note, and local date/time.
+   - Each transaction row (`.tx-item`) supports:
+     * DELETE BUTTON (`.tx-del-btn`): Tapping the trash icon button stops event
+       propagation and calls `removeTx(id)`. `removeTx(id)` removes the record,
+       records a tombstone in `deletedMap[id]`, and displays a Toast with an
+       "Undo" button (`handleToastUndo()`).
+     * TAP ROW: Tapping anywhere else on the row calls `openEditModal(id)`, opening
+       `#editModal` pre-filled with the transaction's amount, category, note, and
+       local date/time.
+     * SWIPE SCREEN: Swiping horizontally anywhere on the screen smoothly navigates
+       back and forth between Capture and History (`setupSwipeGestures()` in `js/app.js`).
    - Tapping "Save Changes" in `#editModal` calls `saveEditedTx()`, which updates the
      transaction, bumps `updatedAt = Date.now()`, re-sorts `expenses` by `timestamp`,
      persists to `localStorage`, and refreshes all totals and history views.

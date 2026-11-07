@@ -266,6 +266,14 @@
   font-size: 12px;
 }
 
+.csv-btn-share {
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
+  padding: 11px 12px;
+  font-size: 13.5px;
+}
+
 /* Edit Transaction Modal Fields (Larger Mobile-First Sizing) */
 .field-group {
   display: flex;

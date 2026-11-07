@@ -71,19 +71,6 @@ function renderHistoryView() {
       : { year: 'numeric', month: 'short', day: 'numeric' }
     );
 
-    const wrap = document.createElement('div');
-    wrap.className = 'tx-swipe-wrap';
-
-    wrap.innerHTML = `
-      <div class="tx-swipe-bg" aria-hidden="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        <span>Delete</span>
-      </div>
-    `;
-
     const item = document.createElement('div');
     item.className = 'tx-item';
     item.style.setProperty('--cat-color', cat.color);
@@ -105,94 +92,44 @@ function renderHistoryView() {
 
       <div class="tx-right">
         <span class="tx-amount">${currencySymbol}${tx.amount.toFixed(2)}</span>
-        <button type="button" class="tx-action-btn" aria-label="Edit entry" title="Edit">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 20h9"></path>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        <button type="button" class="tx-del-btn" aria-label="Delete entry" title="Delete">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
           </svg>
         </button>
       </div>
     `;
 
-    attachItemInteractions(wrap, item, tx.id);
-    wrap.appendChild(item);
-    container.appendChild(wrap);
-  });
-}
-
-function attachItemInteractions(wrapEl, itemEl, txId) {
-  let startX = 0;
-  let startY = 0;
-  let deltaX = 0;
-  let swipingLeft = false;
-  let gestureDecided = false;
-  let touchMoved = false;
-
-  itemEl.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    deltaX = 0;
-    swipingLeft = false;
-    gestureDecided = false;
-    touchMoved = false;
-  }, { passive: true });
-
-  itemEl.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
-
-    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
-      touchMoved = true;
+    const delBtn = item.querySelector('.tx-del-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeTx(tx.id);
+      });
     }
 
-    if (!gestureDecided) {
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
-        gestureDecided = true;
-        // Swipe left deletes the item; swipe right bubbles to viewport to switch back to Capture
-        if (dx < 0) {
-          swipingLeft = true;
-          itemEl.classList.add('swiping');
-        }
-      } else if (Math.abs(dy) > 10) {
-        gestureDecided = true;
-        swipingLeft = false;
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+    item.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      moved = false;
+    }, { passive: true });
+    item.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) {
+        moved = true;
       }
-    }
+    }, { passive: true });
+    item.addEventListener('click', () => {
+      if (moved) return;
+      openEditModal(tx.id);
+    });
 
-    if (swipingLeft) {
-      e.stopPropagation();
-      deltaX = Math.min(0, dx);
-      // Slight resistance past -110px
-      const visualX = deltaX < -110 ? -110 + (deltaX + 110) * 0.35 : deltaX;
-      itemEl.style.transform = `translateX(${visualX}px)`;
-    }
-  }, { passive: true });
-
-  const finishSwipe = () => {
-    if (!swipingLeft) return;
-    itemEl.classList.remove('swiping');
-    const deleteThreshold = -75;
-    if (deltaX <= deleteThreshold) {
-      triggerHaptic(18);
-      itemEl.style.transform = 'translateX(-105%)';
-      setTimeout(() => {
-        removeTx(txId);
-      }, 170);
-    } else {
-      itemEl.style.transform = 'translateX(0)';
-    }
-    swipingLeft = false;
-    deltaX = 0;
-  };
-
-  itemEl.addEventListener('touchend', finishSwipe);
-  itemEl.addEventListener('touchcancel', finishSwipe);
-
-  itemEl.addEventListener('click', () => {
-    if (touchMoved) return;
-    openEditModal(txId);
+    container.appendChild(item);
   });
 }
 

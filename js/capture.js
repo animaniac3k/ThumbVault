@@ -50,6 +50,11 @@ function refreshInputDisplay() {
 }
 
 function commitRecord() {
+  const noteInput = document.getElementById('txNoteInput');
+  if (noteInput && document.activeElement === noteInput) {
+    noteInput.blur();
+  }
+
   const amountVal = parseFloat(activeInputStr);
   if (!amountVal || amountVal <= 0) {
     showToast('Enter an amount first');
@@ -57,7 +62,6 @@ function commitRecord() {
     return;
   }
 
-  const noteInput = document.getElementById('txNoteInput');
   const noteRaw = noteInput ? noteInput.value.trim() : '';
   const catObj = CATEGORIES.find(c => c.id === selectedCatId) || CATEGORIES[0];
   const now = Date.now();
@@ -165,5 +169,9 @@ function renderTotals() {
   const histCountEl = document.getElementById('historyPillCount');
   if (histCountEl) {
     histCountEl.textContent = `(${expenses.length})`;
+  }
+
+  if (typeof renderChartView === 'function') {
+    renderChartView();
   }
 }
