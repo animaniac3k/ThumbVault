@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thumbvault-shell-v13';
+const CACHE_NAME = 'thumbvault-shell-v14';
 const APP_SHELL = [
   './',
   './index.html',

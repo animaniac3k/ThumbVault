@@ -45,16 +45,16 @@
         </div>
       </div>
 
-      <!-- Segmented View Switcher -->
-      <div class="screen-toggle">
-        <button type="button" class="screen-tab-btn active" id="tabCapture" onclick="switchScreen(0)">
-          Capture
+      <!-- 3-Dot Screen Indicator & Switcher -->
+      <div class="screen-toggle" role="tablist" aria-label="App Screens">
+        <button type="button" class="screen-tab-btn active" id="tabCapture" onclick="switchScreen(0)" aria-label="Capture Screen" title="Capture">
+          <span class="screen-dot"></span>
         </button>
-        <button type="button" class="screen-tab-btn" id="tabHistory" onclick="switchScreen(1)">
-          History <span id="historyPillCount" style="opacity: 0.7; font-size: 10px;"></span>
+        <button type="button" class="screen-tab-btn" id="tabHistory" onclick="switchScreen(1)" aria-label="History Screen" title="History">
+          <span class="screen-dot"></span>
         </button>
-        <button type="button" class="screen-tab-btn" id="tabChart" onclick="switchScreen(2)">
-          Chart
+        <button type="button" class="screen-tab-btn" id="tabChart" onclick="switchScreen(2)" aria-label="Chart Screen" title="Chart">
+          <span class="screen-dot"></span>
         </button>
       </div>
 

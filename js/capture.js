@@ -166,11 +166,6 @@ function renderTotals() {
       : `From ${monthStartObj.getDate()} ${monthNames[monthStartObj.getMonth()]}`;
   }
 
-  const histCountEl = document.getElementById('historyPillCount');
-  if (histCountEl) {
-    histCountEl.textContent = `(${expenses.length})`;
-  }
-
   if (typeof renderChartView === 'function') {
     renderChartView();
   }
